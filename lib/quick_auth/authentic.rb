@@ -11,6 +11,7 @@ module QuickAuth
     PasswordRequired = Proc.new { |u| u.password_required? }
 
     included do
+			add_mongo_keys!
       #validates_length_of :em, :within => 6..100
       validates_format_of :em, :with => RegEmailOk
       #validates_presence_of :password, :if => PasswordRequired
@@ -24,15 +25,10 @@ module QuickAuth
       dig
     end
 
-    def hex_token
-      ActiveSupport::SecureRandom.hex(64)
-    end
-    
     def friendly_token
       # use base64url as defined by RFC4648
       ActiveSupport::SecureRandom.base64(15).tr('+/=', '').strip.delete("\n")
     end
-      
 
     module ClassMethods
       def authenticate(email, pw)
@@ -43,6 +39,22 @@ module QuickAuth
       def find_using_perishable_token(token)
         u = self.first(:conditions => {:phtk => token, :phtke.gt => Time.now})
       end
+
+			def add_mongo_keys!
+				key :em,    String
+				key :crp,   String    # crypted password
+				key :pws,   String    # password salt
+				key :pstk,  String    # persistant token
+				key :phtk,  String    # perishable token
+				key :phtke, Time      # perishable token expiration
+						
+				attr_alias :email,              :em
+				attr_alias :crypted_password,   :crp
+				attr_alias :password_salt,      :pws
+				attr_alias :persistent_token,   :pstk
+				attr_alias :perishable_token,   :phtk
+				attr_alias :perishable_token_exp, :phtke
+			end
     end
 
     module InstanceMethods
