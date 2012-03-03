@@ -11,9 +11,8 @@ module QuickAuth
     PasswordRequired = Proc.new { |u| u.password_required? }
 
     included do
-			add_mongo_keys!
       #validates_length_of :em, :within => 6..100
-      validates_format_of :em, :with => RegEmailOk
+      #validates_format_of :em, :with => RegEmailOk
       #validates_presence_of :password, :if => PasswordRequired
       validates_confirmation_of :password, :if => PasswordRequired, :allow_nil => true
       validates_length_of :password, :minimum => 6, :if => PasswordRequired, :allow_nil => false
@@ -31,24 +30,17 @@ module QuickAuth
     end
 
     module ClassMethods
-      def authenticate(email, pw)
-        u = self.first(:conditions => {:em => email.downcase})
-        u && u.authenticated?(pw) ? u : nil
-      end
-
       def find_using_perishable_token(token)
         u = self.first(:conditions => {:phtk => token, :phtke.gt => Time.now})
       end
 
-			def add_mongo_keys!
-				key :em,    String
+			def quick_auth_mongo_keys!
 				key :crp,   String    # crypted password
 				key :pws,   String    # password salt
 				key :pstk,  String    # persistant token
 				key :phtk,  String    # perishable token
 				key :phtke, Time      # perishable token expiration
 						
-				attr_alias :email,              :em
 				attr_alias :crypted_password,   :crp
 				attr_alias :password_salt,      :pws
 				attr_alias :persistent_token,   :pstk
@@ -80,7 +72,6 @@ module QuickAuth
       end
       
       def reset_perishable_token!
-        seed = "#{email}#{Time.now.to_s.split(//).sort_by {rand}.join}"
         self.perishable_token_exp = 1.day.from_now
         self.perishable_token = self.friendly_token
         save!
