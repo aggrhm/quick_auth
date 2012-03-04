@@ -18,17 +18,6 @@ module QuickAuth
       validates_length_of :password, :minimum => 6, :if => PasswordRequired, :allow_nil => false, :message => "Your password must be at least 6 characters"
     end
 
-    def digest(password, salt)
-      dig = [password, salt].flatten.join('')
-      20.times { dig = Digest::SHA512.hexdigest(dig) }
-      dig
-    end
-
-    def friendly_token
-      # use base64url as defined by RFC4648
-      SecureRandom.base64(15).tr('+/=', '').strip.delete("\n")
-    end
-
     module ClassMethods
       def find_using_perishable_token(token)
         u = self.first(:conditions => {:phtk => token, :phtke.gt => Time.now})
@@ -47,6 +36,18 @@ module QuickAuth
 				attr_alias :perishable_token,   :phtk
 				attr_alias :perishable_token_exp, :phtke
 			end
+
+			def digest(password, salt)
+				dig = [password, salt].flatten.join('')
+				20.times { dig = Digest::SHA512.hexdigest(dig) }
+				dig
+			end
+
+			def friendly_token
+				# use base64url as defined by RFC4648
+				SecureRandom.base64(15).tr('+/=', '').strip.delete("\n")
+			end
+
     end
 
     module InstanceMethods
