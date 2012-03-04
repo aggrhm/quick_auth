@@ -15,7 +15,7 @@ module QuickAuth
       #validates_format_of :em, :with => RegEmailOk
       #validates_presence_of :password, :if => PasswordRequired
       validates_confirmation_of :password, :if => PasswordRequired, :allow_nil => true
-      validates_length_of :password, :minimum => 6, :if => PasswordRequired, :allow_nil => false
+      validates_length_of :password, :minimum => 6, :if => PasswordRequired, :allow_nil => false, :message => "Your password must be at least 6 characters"
     end
 
     def digest(password, salt)
