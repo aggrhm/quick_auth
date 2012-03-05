@@ -63,8 +63,8 @@ module QuickAuth
       def password=(value)
         if value.present?
           @password = value
-          self.password_salt = friendly_token
-          self.crypted_password = digest(value, self.password_salt)
+          self.password_salt = QuickAuth::Authentic::friendly_token
+          self.crypted_password = QuickAuth::Authentic::digest(value, self.password_salt)
         end
       end
       
@@ -74,7 +74,7 @@ module QuickAuth
       
       def reset_perishable_token!
         self.perishable_token_exp = 1.day.from_now
-        self.perishable_token = self.friendly_token
+        self.perishable_token = QuickAuth::Authentic::friendly_token
         save!
       end
 
