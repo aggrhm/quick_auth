@@ -53,7 +53,7 @@ module QuickAuth
     module InstanceMethods
     
       def authenticated?(pw)
-        self.crypted_password == digest(pw, self.password_salt) ? true : false
+        self.crypted_password == self.class.digest(pw, self.password_salt) ? true : false
       end
       
       def password
