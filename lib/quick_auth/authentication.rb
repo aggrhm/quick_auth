@@ -105,7 +105,7 @@ module QuickAuth
     # Called from #current_user. First attempt to sign_in by the user id stored in the session.
     def sign_in_from_session
       if session[:user_id]
-        self.current_user = User.find_by_id(session[:user_id])
+        self.current_user = User.find(session[:user_id])
       end
     end
 

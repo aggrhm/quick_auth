@@ -23,7 +23,7 @@ module QuickAuth
         u = self.first(:conditions => {:phtk => token, :phtke.gt => Time.now})
       end
 
-			def quick_auth_mongo_keys!
+			def quick_auth_mongomapper_keys!
 				key :crp,   String    # crypted password
 				key :pws,   String    # password salt
 				key :pstk,  String    # persistant token
@@ -35,6 +35,14 @@ module QuickAuth
 				attr_alias :persistent_token,   :pstk
 				attr_alias :perishable_token,   :phtk
 				attr_alias :perishable_token_exp, :phtke
+			end
+
+			def quick_auth_mongoid_keys!
+				field :crp, as: :crypted_password, type: String    # crypted password
+				field :pws, as: :password_salt, type: String    # password salt
+				field :pstk, as: :persistent_token, type: String    # persistant token
+				field :phtk, as: :perishable_token, type: String    # perishable token
+				field :phtke, as: :perishable_token_exp, type: Time      # perishable token expiration
 			end
 
 			def digest(password, salt)
@@ -50,35 +58,33 @@ module QuickAuth
 
     end
 
-    module InstanceMethods
-    
-      def authenticated?(pw)
-        self.crypted_password == self.class.digest(pw, self.password_salt) ? true : false
-      end
-      
-      def password
-        @password
-      end
-      
-      def password=(value)
-        if value.present?
-          @password = value
-          self.password_salt = self.class.friendly_token
-          self.crypted_password = self.class.digest(value, self.password_salt)
-        end
-      end
-      
-      def password_required?
-        crypted_password.blank?
-      end
-      
-      def reset_perishable_token!
-        self.perishable_token_exp = 1.day.from_now
-        self.perishable_token = self.class.friendly_token
-        save!
-      end
+	
+		def authenticated?(pw)
+			self.crypted_password == self.class.digest(pw, self.password_salt) ? true : false
+		end
+		
+		def password
+			@password
+		end
+		
+		def password=(value)
+			if value.present?
+				@password = value
+				self.password_salt = self.class.friendly_token
+				self.crypted_password = self.class.digest(value, self.password_salt)
+			end
+		end
+		
+		def password_required?
+			crypted_password.blank?
+		end
+		
+		def reset_perishable_token!
+			self.perishable_token_exp = 1.day.from_now
+			self.perishable_token = self.class.friendly_token
+			save!
+		end
 
-    end
-  
-  end
+	end
+
 end
