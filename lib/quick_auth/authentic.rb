@@ -82,7 +82,7 @@ module QuickAuth
 		def reset_perishable_token!
 			self.perishable_token_exp = 1.day.from_now
 			self.perishable_token = self.class.friendly_token
-			save!
+			self.save
 		end
 
 	end
