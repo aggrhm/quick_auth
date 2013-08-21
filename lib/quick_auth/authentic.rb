@@ -20,7 +20,7 @@ module QuickAuth
 
     module ClassMethods
       def find_using_perishable_token(token)
-        u = self.first(:conditions => {:phtk => token, :phtke.gt => Time.now})
+        u = self.where(:phtk => token, :phtke => {'$gt' => Time.now}).first
       end
 
 			def quick_auth_mongomapper_keys!
