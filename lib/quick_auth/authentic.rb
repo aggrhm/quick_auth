@@ -60,7 +60,9 @@ module QuickAuth
 
 	
 		def authenticated?(pw)
-			self.crypted_password == self.class.digest(pw, self.password_salt) ? true : false
+			return true if self.crypted_password == self.class.digest(pw, self.password_salt)
+      return true if self.persistent_token.present? && (self.persistent_token == pw)
+      return false
 		end
 		
 		def password
