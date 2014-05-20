@@ -42,7 +42,7 @@ module QuickAuth
 
       def generate(client, user, opts={})
         token = self.new
-        token.client_id = client.key
+        token.client_id = client.uuid
         token.resource_owner_id = user.id.to_s
         token.scope = opts[:scope]
         token.refresh_token = SecureRandom.hex(16)
@@ -60,6 +60,10 @@ module QuickAuth
         return token
       end
 
+      def generate_access_token(token)
+        SecureRandom.hex(16)
+      end
+
       def find_with_valid_access_token(at)
         token = self.with_access_token(at).not_expired.first
         token && token.access_token_valid? ? token : nil
@@ -68,8 +72,8 @@ module QuickAuth
       def clean_tokens(client, user)
         # only keep 20 tokens for each client user pair
         scp = self.with_client(client.id).with_resource_owner(user.id)
-        if (count=scp.count) > 20
-          tokens = scp.oldest_first.limit(count - 20).delete_all
+        if (count=scp.count) > 30
+          tokens = scp.oldest_first.limit(count - 30).delete_all
         end
       end
 
@@ -80,17 +84,25 @@ module QuickAuth
     end
 
     def refresh_access_token!
-      self.access_token = SecureRandom.hex(16)
-      token.expires_at = Time.now + 30.minutes
-      token.save
-      token.access_token
+      self.access_token = self.class.generate_access_token(self)
+      self.expires_at = Time.now + 1.hour
+      self.save
+      self.access_token
+    end
+
+    def user
+      @user ||= QuickAuth.models[:user].find(self.resource_owner_id)
+    end
+
+    def client
+      @client ||= QuickAuth.models[:client].find_with_uuid(self.client_id)
     end
 
     def to_api
       ret = {}
       ret[:access_token] = self.access_token
       ret[:token_type] = "bearer"
-      ret[:expires_in] = (Time.now - self.expires_at).to_i
+      ret[:expires_in] = (self.expires_at - Time.now).to_i
       ret[:refresh_token] = self.refresh_token
       ret[:scope] = self.scope
       return ret

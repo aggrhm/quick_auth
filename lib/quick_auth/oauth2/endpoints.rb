@@ -7,7 +7,7 @@ module QuickAuth
       def self.included(base)
         base.before_filter :authenticate_client
         base.rescue_from AuthError do |e|
-          render :json => e.data.to_json
+          render :json => e.data.to_json, :status => 400
         end
       end
 
@@ -63,7 +63,7 @@ module QuickAuth
 
     end
 
-    class AuthError
+    class AuthError < Exception
       attr_accessor :data
       def initialize(opts)
         @data = opts

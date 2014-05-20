@@ -35,11 +35,15 @@ module QuickAuth
       @options = opts.with_indifferent_access
     end
 
+    def options
+      @options ||= {}
+    end
+
     def models
       @models ||= begin
         ret = {}
         @options[:classes].each {|name, cls_str|
-          ret[name] = cls_str.constantize
+          ret[name.to_sym] = cls_str.constantize
         }
         ret
       end

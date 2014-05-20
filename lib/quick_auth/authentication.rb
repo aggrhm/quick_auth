@@ -23,15 +23,15 @@ module QuickAuth
       if @current_user.nil? && QuickAuth.options[:auth_methods].include?(:session)
         sign_in_from_session
       end
-      if @current_user.nil? && QuickAuth.options[:auth_methods].include?(:token)
-        sign_in_from_token
+      if @current_user.nil? && current_token
+        @current_user = current_token.user
       end
       @current_user
     end
 
     def current_client
-      if @current_client.nil? && QuickAuth.options[:auth_methods].include?(:token)
-        sign_in_from_token
+      if @current_client.nil? && current_token
+        @current_client = current_token.client
       end
       @current_client
     end
@@ -102,15 +102,11 @@ module QuickAuth
     end
 
     def sign_in_from_token
-      auth_header = request.headers["Authentication"]
-      return nil if auth_header.nil?
+      auth_header = request.headers["Authorization"]
+      return if auth_header.nil?
       aps = auth_header.split(/\s/)
-      return nil if aps.first != "Bearer"
+      return if aps.first != "Bearer"
       @current_token = QuickAuth.models[:token].find_with_valid_access_token(aps.last)
-      if @current_token
-        @current_user = @current_token.user
-        @current_client = @current_token.client
-      end
     end
     
     # This is ususally what you want; resetting the session willy-nilly wreaks

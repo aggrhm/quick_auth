@@ -33,7 +33,7 @@ module QuickAuth
       end
 
       def find_with_uuid(uuid)
-        self.find(uuid) || self.with_uuid(uuid).first
+        self.with_uuid(uuid).first || self.find(uuid)
       end
 
       def authenticate(id, secret)
