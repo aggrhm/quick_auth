@@ -128,7 +128,17 @@ This strategy allows a client to quickly update an access token after it has exp
 
 ## Using Tokens to Access the API
 
-Once you have obtained a valid access token, you may use it to access your API. How you implement this is largely up to you, but the suggested method is to accept the token in the *Authorization* header as a *Bearer* token.
+Now that your API has token support, you need to allow your API controllers to authenticate against the token. To do so, just include the *QuickAuth::Authentication* module.
+
+	# controllers/application_controller.rb
+	class ApplicationController < ActionController::Base
+		include QuickAuth::Authentication
+
+	end
+
+Note that this module does not perform *any* authorization. All it does is set *current_user*, *current_client*, and *current_token* within your controller scope according to the request Authorization header. It is up to you to perform authorization for your API actions using any method you see fit (I personally use CanCan).
+
+Once the client has obtained a valid access token, the client may use it to access your API. The client should send the token in the *Authorization* header as a *Bearer* token.
 
 	POST /api/post
 	Host: server.example.com
