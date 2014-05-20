@@ -7,7 +7,7 @@ module QuickAuth
 
     class << self
       def included(base)
-        base.send :helper_method, :current_user, :signed_in?, :authorized? if base.respond_to? :helper_method
+        base.send :helper_method, :current_user, :signed_in? if base.respond_to? :helper_method
       end
     end
     
@@ -20,48 +20,33 @@ module QuickAuth
     # Accesses the current user from the session.
     # Future calls avoid the database because nil is not equal to false.
     def current_user
-      @current_user ||= (sign_in_from_session || sign_in_from_basic_auth) unless @current_user == false
+      if @current_user.nil? && QuickAuth.options[:auth_methods].include?(:session)
+        sign_in_from_session
+      end
+      if @current_user.nil? && QuickAuth.options[:auth_methods].include?(:token)
+        sign_in_from_token
+      end
+      @current_user
+    end
+
+    def current_client
+      if @current_client.nil? && QuickAuth.options[:auth_methods].include?(:token)
+        sign_in_from_token
+      end
+      @current_client
+    end
+
+    def current_token
+      if @current_token.nil? && QuickAuth.options[:auth_methods].include?(:token)
+        sign_in_from_token
+      end
+      @current_token
     end
     
     # Store the given user id in the session.
     def current_user=(new_user)
       session[:user_id] = new_user ? new_user.id : nil
       @current_user = new_user || false
-    end
-
-    # Check if the user is authorized
-    #
-    # Override this method in your controllers if you want to restrict access
-    # to only a few actions or if you want to check if the user
-    # has the correct rights.
-    #
-    # Example:
-    #
-    # # only allow nonbobs
-    # def authorized?
-    # current_user.name != "bob"
-    # end
-    #
-    def authorized?(action=nil, resource=nil, *args)
-      signed_in?
-    end
-
-    # Filter method to enforce a sign_in requirement.
-    #
-    # To require sign_ins for all actions, use this in your controllers:
-    #
-    # before_filter :sign_in_required
-    #
-    # To require sign_ins for specific actions, use this in your controllers:
-    #
-    # before_filter :sign_in_required, :only => [ :edit, :update ]
-    #
-    # To skip this in a subclassed controller:
-    #
-    # skip_before_filter :sign_in_required
-    #
-    def authenticate
-      authorized? || access_denied
     end
 
     # Redirect as appropriate when an access request fails.
@@ -115,13 +100,27 @@ module QuickAuth
         self.current_user = User.authenticate(email, password)
       end
     end
+
+    def sign_in_from_token
+      auth_header = request.headers["Authentication"]
+      return nil if auth_header.nil?
+      aps = auth_header.split(/\s/)
+      return nil if aps.first != "Bearer"
+      @current_token = QuickAuth.models[:token].find_with_valid_access_token(aps.last)
+      if @current_token
+        @current_user = @current_token.user
+        @current_client = @current_token.client
+      end
+    end
     
     # This is ususally what you want; resetting the session willy-nilly wreaks
     # havoc with forgery protection, and is only strictly necessary on sign_in.
     # However, **all session state variables should be unset here**.
     def sign_out_keeping_session!
       # Kill server-side auth cookie
-      @current_user = false # not signed in, and don't do it for me
+      @current_user = nil # not signed in, and don't do it for me
+      @current_token = nil
+      @current_client = nil
       session[:user_id] = nil # keeps the session but kill our variable
       # explicitly kill any other session variables you set
     end
