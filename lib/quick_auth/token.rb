@@ -53,8 +53,8 @@ module QuickAuth
         return token
       end
 
-      def refresh_access_token(rt)
-        token = self.with_refresh_token(rt).first
+      def refresh_access_token(client, rt)
+        token = self.with_client(client.uuid).with_refresh_token(rt).first
         return nil if token.nil?
         token.refresh_access_token!
         return token
@@ -71,7 +71,7 @@ module QuickAuth
 
       def clean_tokens(client, user)
         # only keep 20 tokens for each client user pair
-        scp = self.with_client(client.id).with_resource_owner(user.id)
+        scp = self.with_client(client.uuid).with_resource_owner(user.id)
         if (count=scp.count) > 30
           tokens = scp.oldest_first.limit(count - 30).delete_all
         end

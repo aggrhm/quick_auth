@@ -45,7 +45,7 @@ module QuickAuth
 
       def handle_refresh_token_request
         refresh = params[:refresh_token]
-        @token = QuickAuth.models[:token].refresh_access_token(refresh)
+        @token = QuickAuth.models[:token].refresh_access_token(@client, refresh)
         if @token
           render_token(@token)
         else
