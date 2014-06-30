@@ -1,3 +1,5 @@
+require "base64"
+
 module QuickAuth
 
   module OAuth2
@@ -24,7 +26,18 @@ module QuickAuth
       private
 
       def authenticate_client
-        @client = QuickAuth.models[:client].authenticate(params[:client_id], params[:client_secret])
+        auth_header = request.headers["Authorization"]
+        if !auth_header.nil? && auth_header.start_with?("Basic ")
+          cred = Base64.decode64(auth_header.split(/\s/).last)
+          ca = cred.split(":")
+          client_id = ca.first
+          client_secret = ca.last
+        else
+          client_id = params[:client_id]
+          client_secret = params[:client_secret]
+        end
+
+        @client = QuickAuth.models[:client].authenticate(client_id, client_secret)
         if @client.nil?
           render_error error: 'invalid_client'
         end
