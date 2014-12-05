@@ -105,8 +105,10 @@ module QuickAuth
       auth_header = request.headers["Authorization"]
       return if auth_header.nil?
       aps = auth_header.split(/\s/)
-      return if aps.first != "Bearer"
-      @current_token = QuickAuth.models[:token].find_with_valid_access_token(aps.last)
+      raise QuickAuth::Errors::InvalidAccessTokenError if aps.first != "Bearer"
+      token = QuickAuth.models[:token].find_with_valid_access_token(aps.last)
+      raise QuickAuth::Errors::InvalidAccessTokenError if token.nil?
+      @current_token = token
     end
     
     # This is ususally what you want; resetting the session willy-nilly wreaks

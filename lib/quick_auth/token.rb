@@ -60,7 +60,7 @@ module QuickAuth
         return token
       end
 
-      def generate_access_token(token)
+      def generate_token
         SecureRandom.hex(16)
       end
 
@@ -84,7 +84,8 @@ module QuickAuth
     end
 
     def refresh_access_token!
-      self.access_token = self.class.generate_access_token(self)
+      self.access_token = self.class.generate_token
+      self.refresh_token = self.class.generate_token
       self.expires_at = Time.now + 1.hour
       self.save
       self.access_token

@@ -51,5 +51,12 @@ module QuickAuth
 
   end
 
+  module Errors
+
+    class InvalidAccessTokenError < StandardError
+    end
+
+  end
+
 
 end
