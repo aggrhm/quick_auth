@@ -32,7 +32,7 @@ module QuickAuth
             where(cid: cid)
           }
           scope :with_resource_owner, lambda {|roid|
-            where(roid: roid)
+            where(roid: roid.to_s)
           }
           scope :oldest_first, lambda {
             asc(:c_at)

@@ -7,7 +7,7 @@ module QuickAuth
     module Endpoints
 
       def self.included(base)
-        base.before_filter :authenticate_client
+        base.before_filter :authenticate_client, only: [:token]
         base.rescue_from AuthError do |e|
           render :json => e.data.to_json, :status => 400
         end
@@ -20,6 +20,8 @@ module QuickAuth
           handle_password_grant_token_request
         when "refresh_token"
           handle_refresh_token_request
+        when "authorization_code"
+          handle_authorization_code_token_request
         end
       end
 
@@ -60,6 +62,21 @@ module QuickAuth
         refresh = params[:refresh_token]
         @token = QuickAuth.models[:token].refresh_access_token(@client, refresh)
         if @token
+          render_token(@token)
+        else
+          render_error error: 'invalid_grant'
+        end
+      end
+
+      def handle_authorization_code_token_request
+        code = params[:code]
+        # find grant with code for client
+        @grant = QuickAuth.models[:grant].find_with_code_for_client(@client, code)
+        if @grant
+          user = @grant.user
+          scope = @grant.scope
+          @token = QuickAuth.models[:token].generate(@client, user, {scope: scope})
+          @grant.destroy  # remove grant
           render_token(@token)
         else
           render_error error: 'invalid_grant'

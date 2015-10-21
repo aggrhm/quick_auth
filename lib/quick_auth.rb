@@ -3,6 +3,7 @@ require "quick_auth/authentication"
 require "quick_auth/authentic"
 require "quick_auth/client"
 require "quick_auth/token"
+require "quick_auth/grant"
 require "quick_auth/oauth2/endpoints"
 
 module QuickAuth
@@ -29,6 +30,7 @@ module QuickAuth
         classes: {
           client: "::Client",
           token: "::Token",
+          grant: "::Grant",
           user: "::User"
         }
       }
