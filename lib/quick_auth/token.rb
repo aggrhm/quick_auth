@@ -84,10 +84,13 @@ module QuickAuth
     end
 
     def refresh_access_token!
-      self.access_token = self.class.generate_token
-      self.refresh_token = self.class.generate_token
-      self.expires_at = Time.now + 1.hour
-      self.save
+      # only refresh token if about to expire
+      if self.expires_at.nil? || (self.expires_at - Time.now) < 10
+        self.access_token = self.class.generate_token
+        self.refresh_token = self.class.generate_token
+        self.expires_at = Time.now + 1.hour
+        self.save
+      end
       self.access_token
     end
 
