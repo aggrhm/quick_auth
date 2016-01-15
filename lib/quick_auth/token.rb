@@ -85,6 +85,7 @@ module QuickAuth
 
     def refresh_access_token!
       # only refresh token if about to expire
+      self.reload unless self.new_record?   # make sure using latest token
       if self.expires_at.nil? || (self.expires_at - Time.now) < 10
         self.access_token = self.class.generate_token
         self.refresh_token = self.class.generate_token
