@@ -45,7 +45,7 @@ module QuickAuth
     
     # Store the given user id in the session.
     def current_user=(new_user)
-      session[:user_id] = new_user ? new_user.id : nil
+      session[:user_id] = new_user ? new_user.id.to_s : nil
       @current_user = new_user || false
     end
 

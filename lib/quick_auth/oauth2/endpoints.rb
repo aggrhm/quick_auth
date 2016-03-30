@@ -49,7 +49,7 @@ module QuickAuth
         username = params[:username]
         password = params[:password]
         scope = params[:scope]
-        @user = QuickAuth.models[:user].authenticate(username, password)
+        @user = QuickAuth.models[:user].authenticate(params)
         if @user
           @token = QuickAuth.models[:token].generate(@client, @user, {scope: scope})
           render_token(@token)

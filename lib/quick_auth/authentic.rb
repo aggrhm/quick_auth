@@ -14,8 +14,8 @@ module QuickAuth
 			#validates_length_of :em, :within => 6..100
 			#validates_format_of :em, :with => RegEmailOk
 			#validates_presence_of :password, :if => PasswordRequired
-			validates_confirmation_of :password, :if => PasswordRequired, :allow_nil => true
-			validates_length_of :password, :minimum => 6, :if => PasswordRequired, :allow_nil => false, :message => "Your password must be at least 6 characters"
+			#validates_confirmation_of :password, :if => PasswordRequired, :allow_nil => true
+			#validates_length_of :password, :minimum => 6, :if => PasswordRequired, :allow_nil => false, :message => "Your password must be at least 6 characters"
 		end
 
 		module ClassMethods
