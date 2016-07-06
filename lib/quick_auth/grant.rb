@@ -1,6 +1,7 @@
 module QuickAuth
 
   module Grant
+    include QuickAuth::ModelBase
 
     def self.included(base)
       base.send :extend, ClassMethods

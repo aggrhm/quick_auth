@@ -1,6 +1,7 @@
 module QuickAuth
 
   module Token
+    include QuickAuth::ModelBase
 
     def self.included(base)
       base.send :extend, ClassMethods
@@ -48,6 +49,7 @@ module QuickAuth
         token.refresh_token = SecureRandom.hex(16)
         token.refresh_access_token!
         token.save
+        token.report_event('generated')
 
         self.clean_tokens(client, user)
         return token
@@ -57,6 +59,7 @@ module QuickAuth
         token = self.with_client(client.uuid).with_refresh_token(rt).first
         return nil if token.nil?
         token.refresh_access_token!
+        token.report_event('refreshed')
         return token
       end
 

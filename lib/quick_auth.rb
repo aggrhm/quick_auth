@@ -1,4 +1,5 @@
 require "quick_auth/version"
+require "quick_auth/model_base"
 require "quick_auth/authentication"
 require "quick_auth/authentic"
 require "quick_auth/client"
@@ -43,11 +44,7 @@ module QuickAuth
 
     def models
       @models ||= begin
-        ret = {}
-        @options[:classes].each {|name, cls_str|
-          ret[name.to_sym] = cls_str.constantize
-        }
-        ret
+        ModelMap.new(@options[:classes])
       end
     end
 
@@ -60,5 +57,17 @@ module QuickAuth
 
   end
 
+  class ModelMap
+
+    def initialize(classes)
+      @classes = classes
+    end
+
+    def [](val)
+      val = val.to_sym
+      return @classes[val].constantize
+    end
+
+  end
 
 end
