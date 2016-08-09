@@ -14,6 +14,7 @@ module QuickAuth
           field :nm, as: :name, type: String
           field :sc, as: :secret, type: String
           field :ru, as: :redirect_uri, type: String
+          field :ate, as: :access_token_expires_in, type: Integer, default: 3600
 
           include Mongoid::Timestamps::Short
 

@@ -47,7 +47,7 @@ module QuickAuth
         token.resource_owner_id = user.id.to_s
         token.scope = opts[:scope]
         token.refresh_token = SecureRandom.hex(16)
-        token.refresh_access_token!
+        token.refresh_access_token!(expires_in: client.access_token_expires_in)
         token.save
         token.report_event('generated')
 
@@ -58,7 +58,7 @@ module QuickAuth
       def refresh_access_token(client, rt)
         token = self.with_client(client.uuid).with_refresh_token(rt).first
         return nil if token.nil?
-        token.refresh_access_token!
+        token.refresh_access_token!(expires_in: client.access_token_expires_in)
         token.report_event('refreshed')
         return token
       end
@@ -86,13 +86,14 @@ module QuickAuth
       self.expires_at > Time.now
     end
 
-    def refresh_access_token!
+    def refresh_access_token!(opts={})
+      exp_in = opts[:expires_in] || 3600
       # only refresh token if about to expire
       self.reload unless self.new_record?   # make sure using latest token
       if self.expires_at.nil? || (self.expires_at - Time.now) < 10
         self.access_token = self.class.generate_token
         #self.refresh_token = self.class.generate_token
-        self.expires_at = Time.now + 1.hour
+        self.expires_at = Time.now + exp_in
         self.save
       end
       self.access_token
