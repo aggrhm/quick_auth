@@ -9,36 +9,78 @@ module QuickAuth
 
     module ClassMethods
 
-      def quick_auth_token_fields_for(db)
-        if db == :mongoid
-          field :roid, as: :resource_owner_id, type: String
-          field :cid, as: :client_id, type: String
-          field :at, as: :access_token, type: String
-          field :rt, as: :refresh_token, type: String
-          field :ex_at, as: :expires_at, type: Time
-          field :sc, as: :scope, type: String
-
-          include Mongoid::Timestamps::Short
-
-          scope :with_access_token, lambda {|at|
-            where(at: at)
-          }
-          scope :with_refresh_token, lambda {|rt|
-            where(rt: rt)
-          }
-          scope :not_expired, lambda {
-            where(:ex_at => {'$gt' => Time.now})
-          }
-          scope :with_client, lambda {|cid|
-            where(cid: cid)
-          }
-          scope :with_resource_owner, lambda {|roid|
-            where(roid: roid.to_s)
-          }
-          scope :oldest_first, lambda {
-            asc(:c_at)
-          }
+      def quick_auth_token!(opts)
+        if opts[:for] == :mongoid
+          quick_auth_token_mongoid_fields!
+        else
+          quick_auth_token_schema_sync_fields!
         end
+      end
+
+      def quick_auth_token_fields_for(db)
+        Rails.logger.info "NOTE: This method is deprecated, use quick_auth_token!"
+        quick_auth_token_mongoid_fields!
+      end
+
+      def quick_auth_token_mongoid_fields!
+        @quick_auth_orm = :mongoid
+        field :roid, as: :resource_owner_id, type: String
+        field :cid, as: :client_id, type: String
+        field :at, as: :access_token, type: String
+        field :rt, as: :refresh_token, type: String
+        field :ex_at, as: :expires_at, type: Time
+        field :sc, as: :scope, type: String
+
+        include Mongoid::Timestamps::Short
+
+        scope :with_access_token, lambda {|at|
+          where(at: at)
+        }
+        scope :with_refresh_token, lambda {|rt|
+          where(rt: rt)
+        }
+        scope :not_expired, lambda {
+          where(:ex_at => {'$gt' => Time.now})
+        }
+        scope :with_client, lambda {|cid|
+          where(cid: cid)
+        }
+        scope :with_resource_owner, lambda {|roid|
+          where(roid: roid.to_s)
+        }
+        scope :oldest_first, lambda {
+          asc(:c_at)
+        }
+      end
+
+      def quick_auth_token_schema_sync_fields!
+        @quick_auth_orm = :schema_sync
+        field :resource_owner_id, type: String
+        field :client_id, type: String
+        field :access_token, type: String
+        field :refresh_token, type: String
+        field :expires_at, type: Time
+        field :scope, type: String
+        timestamps!
+
+        scope :with_access_token, lambda {|at|
+          where(access_token: at)
+        }
+        scope :with_refresh_token, lambda {|rt|
+          where(refresh_token: rt)
+        }
+        scope :not_expired, lambda {
+          where("expires_at > ?", Time.now)
+        }
+        scope :with_client, lambda {|cid|
+          where(client_id: cid)
+        }
+        scope :with_resource_owner, lambda {|roid|
+          where(resource_owner_id: roid.to_s)
+        }
+        scope :oldest_first, lambda {
+          order(:created_at)
+        }
       end
 
       def generate(client, user, opts={})

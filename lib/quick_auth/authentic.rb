@@ -20,30 +20,41 @@ module QuickAuth
 
     module ClassMethods
       def find_using_perishable_token(token)
-        u = self.where(:phtk => token, :phtke => {'$gt' => Time.now}).first
+        if @quick_auth_orm == :mongoid
+          u = self.where(:phtk => token, :phtke => {'$gt' => Time.now}).first
+        else
+          u = self.where(perishable_token: token).where("perishable_token_exp > ?", Time.now).first
+        end
       end
 
-      def quick_auth_mongomapper_keys!
-        key :crp,   String    # crypted password
-        key :pws,   String    # password salt
-        key :pstk,  String    # persistant token
-        key :phtk,  String    # perishable token
-        key :phtke, Time      # perishable token expiration
-            
-        attr_alias :crypted_password,   :crp
-        attr_alias :password_salt,      :pws
-        attr_alias :persistent_token,   :pstk
-        attr_alias :perishable_token,   :phtk
-        attr_alias :perishable_token_exp, :phtke
+      def quick_auth_authentic!(opts)
+        if opts[:for] == :mongoid
+          quick_auth_authentic_mongoid_fields!
+        elsif opts[:for] == :schema_sync
+          quick_auth_authentic_schema_sync_fields!
+        end
       end
 
-      def quick_auth_mongoid_keys!
+      def quick_auth_authentic_mongoid_fields!
         @quick_auth_orm = :mongoid
         field :crp, as: :crypted_password, type: String    # crypted password
         field :pws, as: :password_salt, type: String    # password salt
         field :pstk, as: :persistent_token, type: String    # persistant token
         field :phtk, as: :perishable_token, type: String    # perishable token
         field :phtke, as: :perishable_token_exp, type: Time      # perishable token expiration
+      end
+      def quick_auth_mongoid_keys!
+        Rails.logger.info "NOTE: This method is deprecated. Please use authentic_mongoid_fields!"
+        authentic_mongoid_fields!
+      end
+
+      def quick_auth_authentic_schema_sync_fields!
+        @quick_auth_orm = :active_record
+        field :crypted_password, type: String
+        field :password_salt, type: String
+        field :persistent_token, type: String
+        field :perishable_token, type: String
+        field :perishable_token_exp, type: Time
       end
 
       def digest(password, salt)
