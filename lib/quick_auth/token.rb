@@ -9,11 +9,12 @@ module QuickAuth
 
     module ClassMethods
 
-      def quick_auth_token!(opts)
-        if opts[:for] == :mongoid
+      def quick_auth_token!(opts={})
+        case QuickAuth.orm_for_model(self)
+        when :mongoid
           quick_auth_token_mongoid_fields!
-        else
-          quick_auth_token_schema_sync_fields!
+        when :active_record
+          quick_auth_token_active_record_fields!
         end
       end
 
@@ -53,15 +54,17 @@ module QuickAuth
         }
       end
 
-      def quick_auth_token_schema_sync_fields!
+      def quick_auth_token_active_record_fields!
         @quick_auth_orm = :schema_sync
-        field :resource_owner_id, type: String
-        field :client_id, type: String
-        field :access_token, type: String
-        field :refresh_token, type: String
-        field :expires_at, type: Time
-        field :scope, type: String
-        timestamps!
+        if respond_to?(:field)
+          field :resource_owner_id, type: String
+          field :client_id, type: String
+          field :access_token, type: String
+          field :refresh_token, type: String
+          field :expires_at, type: Time
+          field :scope, type: String
+          timestamps!
+        end
 
         scope :with_access_token, lambda {|at|
           where(access_token: at)

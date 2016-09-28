@@ -9,11 +9,12 @@ module QuickAuth
 
     module ClassMethods
 
-      def quick_auth_grant!(opts)
-        if opts[:for] == :mongoid
+      def quick_auth_grant!(opts={})
+        case QuickAuth.orm_for_model(self)
+        when :mongoid
           quick_auth_grant_mongoid_fields!
-        elsif opts[:for] == :schema_sync
-          quick_auth_grant_schema_sync_fields!
+        when :active_record
+          quick_auth_grant_active_record_fields!
         end
       end
 
@@ -48,13 +49,15 @@ module QuickAuth
         }
       end
 
-      def quick_auth_grant_schema_sync_fields!
+      def quick_auth_grant_active_record_fields!
         @quick_auth_orm = :schema_sync
-        field :resource_owner_id, type: String
-        field :client_id, type: String
-        field :code, type: String
-        field :scope, type: String
-        timestamps!
+        if respond_to?(:field)
+          field :resource_owner_id, type: String
+          field :client_id, type: String
+          field :code, type: String
+          field :scope, type: String
+          timestamps!
+        end
 
         scope :with_client, lambda {|cid|
           where(client_id: cid)

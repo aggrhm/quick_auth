@@ -48,6 +48,14 @@ module QuickAuth
       end
     end
 
+    def orm_for_model(model)
+      if model < ActiveRecord::Base
+        return :active_record
+      elsif model.respond_to?(:mongo_session)
+        return :mongoid
+      end
+    end
+
   end
 
   module Errors

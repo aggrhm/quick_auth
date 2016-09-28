@@ -27,11 +27,13 @@ module QuickAuth
         end
       end
 
-      def quick_auth_authentic!(opts)
-        if opts[:for] == :mongoid
+      def quick_auth_authentic!(opts={})
+        orm = QuickAuth.orm_for_model(self)
+        case orm
+        when :mongoid
           quick_auth_authentic_mongoid_fields!
-        elsif opts[:for] == :schema_sync
-          quick_auth_authentic_schema_sync_fields!
+        when :active_record
+          quick_auth_authentic_active_record_fields!
         end
       end
 
@@ -48,13 +50,15 @@ module QuickAuth
         authentic_mongoid_fields!
       end
 
-      def quick_auth_authentic_schema_sync_fields!
+      def quick_auth_authentic_active_record_fields!
         @quick_auth_orm = :active_record
-        field :crypted_password, type: String
-        field :password_salt, type: String
-        field :persistent_token, type: String
-        field :perishable_token, type: String
-        field :perishable_token_exp, type: Time
+        if respond_to?(:field)
+          field :crypted_password, type: String
+          field :password_salt, type: String
+          field :persistent_token, type: String
+          field :perishable_token, type: String
+          field :perishable_token_exp, type: Time
+        end
       end
 
       def digest(password, salt)
