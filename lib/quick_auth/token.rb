@@ -121,7 +121,9 @@ module QuickAuth
         # only keep 20 tokens for each client user pair
         scp = self.with_client(client.uuid).with_resource_owner(user.id)
         if (count=scp.count) > 30
-          tokens = scp.oldest_first.limit(count - 30).delete_all
+          scp.oldest_first.limit(count - 30).each do |t|
+            t.delete
+          end
         end
       end
 
