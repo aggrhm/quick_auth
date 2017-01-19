@@ -105,7 +105,7 @@ module QuickAuth
       auth_header = request.headers["Authorization"]
       return if auth_header.nil?
       aps = auth_header.split(/\s/)
-      raise QuickAuth::Errors::InvalidAccessTokenError if aps.first != "Bearer"
+      return if aps.first != "Bearer"
       token = QuickAuth.models[:token].find_with_valid_access_token(aps.last)
       raise QuickAuth::Errors::InvalidAccessTokenError if token.nil?
       @current_token = token
