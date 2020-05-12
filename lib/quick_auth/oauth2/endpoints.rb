@@ -7,7 +7,7 @@ module QuickAuth
     module Endpoints
 
       def self.included(base)
-        base.before_filter :authenticate_client, only: [:token]
+        base.before_action :authenticate_client, only: [:token]
         base.rescue_from AuthError do |e|
           render :json => e.data.to_json, :status => 400
         end
