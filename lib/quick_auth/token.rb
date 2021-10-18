@@ -154,11 +154,13 @@ module QuickAuth
       @client ||= QuickAuth.models[:client].find_with_uuid(self.client_id)
     end
 
-    def to_api
+    def to_api(opts={})
       ret = {}
       ret[:access_token] = self.access_token
       ret[:token_type] = "bearer"
       ret[:expires_in] = (self.expires_at - Time.now).to_i
+      ret[:expires_at] = self.expires_at.try(:iso8601)
+      ret[:created_at] = self.created_at.try(:iso8601)
       ret[:refresh_token] = self.refresh_token
       ret[:scope] = self.scope
       return ret
